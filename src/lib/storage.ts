@@ -34,6 +34,10 @@ export function addTransaction(input: TransactionInput): Transaction {
     createdAt: new Date().toISOString(),
   };
 
+  if (typeof window === 'undefined') {
+    return transaction;
+  }
+
   const transactions = getTransactions();
   transactions.push(transaction);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
@@ -42,6 +46,10 @@ export function addTransaction(input: TransactionInput): Transaction {
 }
 
 export function deleteTransaction(id: string): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   const transactions = getTransactions();
   const filtered = transactions.filter((t) => t.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));

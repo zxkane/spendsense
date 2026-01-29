@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TransactionForm } from '@/components/TransactionForm';
 import { TransactionList } from '@/components/TransactionList';
 import { Transaction, TransactionInput } from '@/lib/types';
@@ -10,10 +10,14 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
+  const loadTransactions = useCallback(() => {
     setTransactions(getTransactions());
     setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+    loadTransactions();
+  }, [loadTransactions]);
 
   const handleAddTransaction = (input: TransactionInput) => {
     addTransaction(input);
