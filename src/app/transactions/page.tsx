@@ -1,23 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { TransactionForm } from '@/components/TransactionForm';
 import { TransactionList } from '@/components/TransactionList';
 import { Transaction, TransactionInput } from '@/lib/types';
 import { getTransactions, addTransaction, deleteTransaction } from '@/lib/storage';
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  const loadTransactions = useCallback(() => {
-    setTransactions(getTransactions());
-    setIsLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    loadTransactions();
-  }, [loadTransactions]);
+  // Lazy initialization - runs once on mount, client-side only
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    if (typeof window === 'undefined') return [];
+    return getTransactions();
+  });
 
   const handleAddTransaction = (input: TransactionInput) => {
     addTransaction(input);
@@ -28,14 +22,6 @@ export default function TransactionsPage() {
     deleteTransaction(id);
     setTransactions(getTransactions());
   };
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
