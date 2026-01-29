@@ -309,9 +309,6 @@ spendsense/
 │               └── resolve-threads.sh
 ├── docs/
 │   ├── designs/                 # Design canvas documents (.pen files)
-│   │   ├── prd-transaction-management.md
-│   │   └── prd-spending-dashboard.md
-│   ├── test-cases/              # Test case documents
 │   └── templates/               # Document templates
 ├── src/
 │   ├── app/                     # Next.js pages
@@ -323,62 +320,6 @@ spendsense/
     └── workflows/
         └── ci.yml               # GitHub Actions CI config
 ```
-
----
-
-## Data Model
-
-```typescript
-interface Transaction {
-  id: string;
-  amount: number;        // In cents
-  description: string;
-  category: Category;
-  date: string;          // YYYY-MM-DD
-  createdAt: string;
-}
-
-type Category = 'food' | 'transport' | 'entertainment' | 'shopping' | 'bills' | 'other';
-```
-
-## LocalStorage Keys
-
-| Key | Description |
-|-----|-------------|
-| `spendsense-transactions` | Array of Transaction objects |
-
----
-
-## Implementation Log
-
-### 2025-01-29: Project Initialization
-- Create Next.js project with TypeScript + Tailwind
-- Configure Claude Code hooks for workflow enforcement
-- Set up GitHub Actions CI/CD pipeline
-- Create Coming Soon landing page
-- Add Phase 2 PRD documents
-
----
-
-## Feature Roadmap
-
-### Phase 1 (Complete)
-- [x] Project setup with CI/CD
-- [x] Coming Soon landing page
-- [x] Claude Code hooks configured
-
-### Phase 2 (Autonomous Development)
-- [ ] Transaction Management (add/view/delete)
-- [ ] Spending Dashboard (charts and stats)
-
----
-
-## Security Best Practices
-
-- No backend - all data stored locally in browser
-- No authentication required
-- No sensitive data handling
-- All user data stays on their device
 
 ---
 
