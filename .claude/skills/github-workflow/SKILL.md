@@ -57,11 +57,11 @@ Step 9: WAIT FOR PR CHECKS
   - If FAIL → Return to Step 4
   - If PASS → Update PR checklist, proceed to Step 10
        ↓
-Step 10: ADDRESS REVIEWER BOT FINDINGS
+Step 10: ADDRESS REVIEWER BOT FINDINGS (必须回复+关闭)
   - Review all bot comments (Amazon Q, Codex, etc.)
-  - Fix issues or document design decisions
-  - Reply DIRECTLY to each comment thread
-  - RESOLVE each conversation
+  - Fix issues OR explain why it's a false positive
+  - ⚠️ MUST reply DIRECTLY to EACH comment thread
+  - ⚠️ MUST resolve/close EACH conversation (even false positives)
   - Retrigger review: /q review, /codex review
        ↓
 Step 11: ITERATE UNTIL NO FINDINGS
@@ -249,13 +249,92 @@ Multiple review bots can provide automated code review findings on PRs:
 
 ### Handling Bot Review Findings
 
-1. **Review all comments** - Read each finding carefully
-2. **Determine action**:
-   - If valid issue → Fix the code and push
-   - If false positive → Reply explaining the design decision
-3. **Reply to each thread** - Use direct reply, not general PR comment
-4. **Resolve each thread** - Mark conversation as resolved
-5. **Retrigger review** - Comment with appropriate trigger (e.g., `/q review`, `/codex review`)
+**⚠️ 必须遵守的规则: 每个 finding 都必须回复并关闭 discussion**
+
+处理流程:
+
+1. **逐一阅读所有 comments** - 仔细理解每个 finding 的内容
+2. **判断类型并采取行动**:
+   - **有效问题** → 修复代码并 push
+   - **误报 (False Positive)** → 回复说明为何这是误报
+3. **必须直接回复每个 thread** - 使用 `in_reply_to` 回复，不是 PR 级别的 general comment
+4. **必须关闭每个 discussion** - 回复后使用 GraphQL mutation 标记为 resolved
+5. **触发重新审查** - 使用对应命令（如 `/q review`、`/codex review`）
+
+### False Positive 处理规范
+
+**即使是误报，也必须:**
+
+1. **回复 comment** - 清楚说明为什么这是误报
+2. **关闭 discussion** - 标记 thread 为 resolved
+
+**回复模板:**
+
+```
+This is a false positive because {具体原因}.
+
+{详细解释}:
+- {理由 1}
+- {理由 2}
+
+Marking as resolved.
+```
+
+**常见误报场景及回复示例:**
+
+| 场景 | 回复示例 |
+|------|----------|
+| 安全相关文档 | "This is documentation for authorized operators. Access is controlled by IAM permissions, not documentation obscurity." |
+| 测试代码中的硬编码 | "This is a test file using mock data. No real credentials are involved." |
+| 框架约定的模式 | "This pattern is required by Next.js App Router conventions. See: {link to docs}" |
+| 已有防护措施 | "This is protected by {existing mechanism} at {location}. Additional validation here would be redundant." |
+
+### 回复并关闭 Finding 的完整流程
+
+```bash
+# Step 1: 获取所有 review comments
+gh api repos/{owner}/{repo}/pulls/{pr}/comments \
+  --jq '.[] | {id: .id, path: .path, body: .body[:100]}'
+
+# Step 2: 回复每个 comment (有效问题)
+gh api repos/{owner}/{repo}/pulls/{pr}/comments \
+  -X POST \
+  -f body="Addressed in commit {hash} - {修复说明}" \
+  -F in_reply_to=<comment_id>
+
+# Step 2: 回复每个 comment (误报)
+gh api repos/{owner}/{repo}/pulls/{pr}/comments \
+  -X POST \
+  -f body="This is a false positive because {原因}. Marking as resolved." \
+  -F in_reply_to=<comment_id>
+
+# Step 3: 获取未关闭的 thread IDs
+gh api graphql -f query='
+query {
+  repository(owner: "{owner}", name: "{repo}") {
+    pullRequest(number: {pr}) {
+      reviewThreads(first: 50) {
+        nodes { id isResolved }
+      }
+    }
+  }
+}' --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false) | .id'
+
+# Step 4: 关闭每个 thread
+gh api graphql -f query='
+mutation {
+  resolveReviewThread(input: {threadId: "<thread_id>"}) {
+    thread { isResolved }
+  }
+}'
+```
+
+### 使用脚本批量处理
+
+```bash
+# 批量回复并关闭所有 threads
+./.claude/skills/github-workflow/scripts/resolve-threads.sh {owner} {repo} {pr_number}
+```
 
 ### Retrigger Bot Reviews
 
