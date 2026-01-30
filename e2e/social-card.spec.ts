@@ -42,8 +42,12 @@ test.describe('Social Card Generator', () => {
 
     const previewCard = page.getByTestId('preview-card')
 
-    // Check background color (rice paper white)
-    await expect(previewCard).toHaveCSS('background-color', /rgb\(247, 247, 242\)|#f7f7f2/i)
+    // Check background gradient contains rice paper white (gradient theme uses backgroundImage)
+    const bgImage = await previewCard.evaluate(el =>
+      window.getComputedStyle(el).backgroundImage
+    )
+    expect(bgImage).toContain('gradient')
+    expect(bgImage).toMatch(/rgb\(247, 247, 242\)|#f7f7f2/i)
   })
 
   // TC-CARD-004: Theme Switch - lucky-red
@@ -52,11 +56,12 @@ test.describe('Social Card Generator', () => {
 
     const previewCard = page.getByTestId('preview-card')
 
-    // Check background contains Chinese red
-    const bgColor = await previewCard.evaluate(el =>
-      window.getComputedStyle(el).backgroundColor
+    // Check background gradient contains Chinese red
+    const bgImage = await previewCard.evaluate(el =>
+      window.getComputedStyle(el).backgroundImage
     )
-    expect(bgColor).toMatch(/rgb\(196, 30, 58\)|#c41e3a/i)
+    expect(bgImage).toContain('gradient')
+    expect(bgImage).toMatch(/rgb\(196, 30, 58\)|#c41e3a/i)
   })
 
   // TC-CARD-005: Theme Switch - cyber-taoist
@@ -65,7 +70,7 @@ test.describe('Social Card Generator', () => {
 
     const previewCard = page.getByTestId('preview-card')
 
-    // Check dark background
+    // Check dark background color (solid color theme)
     const bgColor = await previewCard.evaluate(el =>
       window.getComputedStyle(el).backgroundColor
     )
@@ -78,7 +83,7 @@ test.describe('Social Card Generator', () => {
 
     const previewCard = page.getByTestId('preview-card')
 
-    // Check vintage paper background
+    // Check vintage paper background color (solid color theme)
     const bgColor = await previewCard.evaluate(el =>
       window.getComputedStyle(el).backgroundColor
     )
@@ -91,11 +96,12 @@ test.describe('Social Card Generator', () => {
 
     const previewCard = page.getByTestId('preview-card')
 
-    // Check light green background
-    const bgColor = await previewCard.evaluate(el =>
-      window.getComputedStyle(el).backgroundColor
+    // Check background gradient contains light green (gradient theme uses backgroundImage)
+    const bgImage = await previewCard.evaluate(el =>
+      window.getComputedStyle(el).backgroundImage
     )
-    expect(bgColor).toMatch(/rgb\(240, 255, 244\)|#f0fff4/i)
+    expect(bgImage).toContain('gradient')
+    expect(bgImage).toMatch(/rgb\(240, 255, 244\)|#f0fff4/i)
   })
 
   // TC-CARD-008: Chinese Character Rendering
