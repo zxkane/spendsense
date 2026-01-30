@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { Download } from 'lucide-react'
+import { Download, X } from 'lucide-react'
 import { toPng } from 'html-to-image'
 
 import { MarkdownEditor } from './MarkdownEditor'
@@ -13,12 +13,14 @@ export function SocialCardGenerator() {
   const [markdown, setMarkdown] = useState(defaultMarkdown)
   const [themeId, setThemeId] = useState('ink-smoke')
   const [isExporting, setIsExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
   const cardRef = useRef<HTMLDivElement>(null)
 
   const handleExport = useCallback(async () => {
     if (!cardRef.current) return
 
     setIsExporting(true)
+    setExportError(null)
     try {
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
@@ -31,6 +33,7 @@ export function SocialCardGenerator() {
       link.click()
     } catch (err) {
       console.error('Export failed:', err)
+      setExportError('导出失败，请重试或尝试简化卡片内容')
     } finally {
       setIsExporting(false)
     }
@@ -90,15 +93,32 @@ export function SocialCardGenerator() {
           <div className="flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold text-zinc-800">卡片预览</h2>
-              <button
-                data-testid="download-btn"
-                onClick={handleExport}
-                disabled={isExporting}
-                className="flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white text-sm rounded-lg hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                {isExporting ? '导出中...' : '下载 PNG'}
-              </button>
+              <div className="flex items-center gap-2">
+                {exportError && (
+                  <div
+                    data-testid="export-error"
+                    className="flex items-center gap-1 text-red-600 text-sm"
+                  >
+                    <span>{exportError}</span>
+                    <button
+                      onClick={() => setExportError(null)}
+                      className="p-0.5 hover:bg-red-100 rounded"
+                      aria-label="关闭错误提示"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                <button
+                  data-testid="download-btn"
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  className="flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white text-sm rounded-lg hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  {isExporting ? '导出中...' : '下载 PNG'}
+                </button>
+              </div>
             </div>
             <div className="flex-1 flex items-center justify-center bg-zinc-100 rounded-xl p-6">
               <PreviewCard ref={cardRef} markdown={markdown} themeId={themeId} />

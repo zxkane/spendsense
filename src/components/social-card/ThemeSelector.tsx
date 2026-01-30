@@ -10,7 +10,7 @@ interface ThemeSelectorProps {
 
 export function ThemeSelector({ selectedTheme, onThemeChange }: ThemeSelectorProps) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2" role="group" aria-label="主题选择">
       {themes.map((theme) => {
         const isSelected = selectedTheme === theme.id
         return (
@@ -18,6 +18,8 @@ export function ThemeSelector({ selectedTheme, onThemeChange }: ThemeSelectorPro
             key={theme.id}
             data-testid={`theme-btn-${theme.id}`}
             onClick={() => onThemeChange(theme.id)}
+            aria-label={`选择${theme.name}主题: ${theme.description}`}
+            aria-pressed={isSelected}
             className={cn(
               'px-3 py-2 text-sm rounded-lg border transition-all',
               isSelected

@@ -18,12 +18,19 @@ function getBackgroundStyle(background: string): React.CSSProperties {
 
 export const PreviewCard = forwardRef<HTMLDivElement, PreviewCardProps>(
   function PreviewCard({ markdown, themeId }, ref) {
-    const theme = useMemo(
-      () => themes.find((t) => t.id === themeId) || themes[0],
-      [themeId]
-    )
+    const theme = useMemo(() => {
+      const found = themes.find((t) => t.id === themeId)
+      if (!found) {
+        console.warn(
+          `Theme with id "${themeId}" not found. Falling back to default theme "${themes[0].id}".`
+        )
+        return themes[0]
+      }
+      return found
+    }, [themeId])
 
-    const today = useMemo(() => new Date().toISOString().split('T')[0], [])
+    // Fresh date on each render to avoid stale dates on exported cards
+    const today = new Date().toISOString().split('T')[0]
 
     const isGlowTheme = themeId === 'cyber-taoist'
 
