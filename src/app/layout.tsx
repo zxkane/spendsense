@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SpendSense - Personal Finance Dashboard",
-  description: "Track your spending, understand your habits. A simple personal finance dashboard.",
+  title: "墨卡 MoCard - Markdown 社交卡片生成器",
+  description: "让文字，变成艺术。将 Markdown 转化为精美的社交媒体分享卡片。",
 };
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
