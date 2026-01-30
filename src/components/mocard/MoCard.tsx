@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Download } from 'lucide-react';
+import { Download, AlertCircle } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { MarkdownPreview } from './MarkdownPreview';
@@ -18,16 +18,32 @@ const DEFAULT_MARKDOWN = `# 🎨 欢迎使用墨卡
 
 *墨卡 · 由 AI 驱动*`;
 
+function getExportErrorMessage(error: Error): string {
+  if (error.message.includes('tainted') || error.message.includes('cross-origin')) {
+    return '导出失败：无法包含外部图片，请移除外部图片后重试。';
+  }
+  if (error.message.includes('memory') || error.message.includes('size')) {
+    return '导出失败：图片过大，请简化内容后重试。';
+  }
+  return '导出失败，请重试。如问题持续存在，请联系支持。';
+}
+
 export function MoCard() {
   const [markdown, setMarkdown] = useState(DEFAULT_MARKDOWN);
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
   const handleExport = useCallback(async () => {
-    if (!previewRef.current) return;
+    if (!previewRef.current) {
+      console.warn('Export attempted before preview element was ready');
+      return;
+    }
 
     setIsExporting(true);
+    setExportError(null);
+
     try {
       const dataUrl = await toPng(previewRef.current, {
         quality: 1,
@@ -39,11 +55,20 @@ export function MoCard() {
       link.href = dataUrl;
       link.click();
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error('Export failed:', {
+        error,
+        themeId: theme.id,
+        markdownLength: markdown.length,
+      });
+
+      const errorMessage = error instanceof Error
+        ? getExportErrorMessage(error)
+        : '导出失败，请重试。';
+      setExportError(errorMessage);
     } finally {
       setIsExporting(false);
     }
-  }, [theme.id]);
+  }, [theme.id, markdown.length]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -94,6 +119,16 @@ export function MoCard() {
             <div ref={previewRef} className="flex-1 min-h-0">
               <MarkdownPreview content={markdown} theme={theme} />
             </div>
+
+            {exportError && (
+              <div
+                className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+                role="alert"
+              >
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{exportError}</span>
+              </div>
+            )}
 
             <button
               data-testid="download-btn"

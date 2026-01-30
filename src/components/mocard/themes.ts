@@ -12,7 +12,7 @@ export interface Theme {
   glowEffect?: string;
 }
 
-export const themes: Theme[] = [
+export const themes: readonly Theme[] = [
   {
     id: 'ink-smoke',
     name: '水墨云烟',

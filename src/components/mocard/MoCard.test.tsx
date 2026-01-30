@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MoCard } from './MoCard';
+import { toPng } from 'html-to-image';
 
 // Mock html-to-image
 vi.mock('html-to-image', () => ({
   toPng: vi.fn(() => Promise.resolve('data:image/png;base64,mock')),
 }));
+
+const mockedToPng = vi.mocked(toPng);
 
 describe('MoCard', () => {
   beforeEach(() => {
@@ -103,6 +106,53 @@ describe('MoCard', () => {
       // Use getAllByText since the slogan appears in both header and default content
       const sloganElements = screen.getAllByText('让文字，变成艺术');
       expect(sloganElements.length).toBeGreaterThan(0);
+    });
+  });
+
+  // Export error handling tests
+  describe('Export Error Handling', () => {
+    it('should display error message when export fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockedToPng.mockRejectedValueOnce(new Error('Canvas tainted'));
+
+      render(<MoCard />);
+      const downloadBtn = screen.getByTestId('download-btn');
+
+      fireEvent.click(downloadBtn);
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+      });
+
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should reset button state after export failure', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockedToPng.mockRejectedValueOnce(new Error('Export failed'));
+
+      render(<MoCard />);
+      const downloadBtn = screen.getByTestId('download-btn');
+
+      fireEvent.click(downloadBtn);
+
+      await waitFor(() => {
+        expect(downloadBtn).not.toBeDisabled();
+        expect(downloadBtn).toHaveTextContent('下载 PNG');
+      });
+    });
+
+    it('should show specific error message for cross-origin issues', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockedToPng.mockRejectedValueOnce(new Error('Canvas is tainted by cross-origin data'));
+
+      render(<MoCard />);
+      fireEvent.click(screen.getByTestId('download-btn'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert').textContent).toContain('外部图片');
+      });
     });
   });
 });
