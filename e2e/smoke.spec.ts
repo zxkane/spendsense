@@ -4,12 +4,16 @@ test.describe('Smoke Tests', () => {
   test('homepage loads successfully', async ({ page }) => {
     await page.goto('/')
 
-    await expect(page).toHaveTitle(/SpendSense/)
+    await expect(page).toHaveTitle(/墨卡|MoCard/)
   })
 
-  test('displays coming soon message', async ({ page }) => {
+  test('displays main app interface', async ({ page }) => {
     await page.goto('/')
 
-    await expect(page.getByText('Coming Soon')).toBeVisible()
+    // Check for markdown editor
+    await expect(page.getByTestId('markdown-input')).toBeVisible()
+
+    // Check for preview card
+    await expect(page.getByTestId('preview-card')).toBeVisible()
   })
 })
